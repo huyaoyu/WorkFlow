@@ -99,13 +99,42 @@ class AccumulatedValue(object):
         print(self.stamp)
 
 class WorkFlow(object):
-    def __init__(self, workingDir):
+    def __init__(self, workingDir, logFilename = None):
         self.workingDir = workingDir # The working directory.
 
         self.isInitialized = False
         self.AV = {"loss": AccumulatedValue("loss")}
 
         self.verbose = False
+
+        if ( logFilename is not None ):
+            self.logFilename = logFilename
+        else:
+            self.logFilename = "wf.log"
+        
+        # Logger.
+        # logging.basicConfig(datefmt = '%m/%d/%Y %I:%M:%S')
+        self.logger = logging.getLogger(__name__)
+        self.logger.setLevel(logging.DEBUG)
+
+        streamHandler = logging.StreamHandler()
+        streamHandler.setLevel(logging.DEBUG)
+
+        formatter = logging.Formatter('%(levelname)s: %(message)s')
+        streamHandler.setFormatter(formatter)
+
+        self.logger.addHandler(streamHandler)
+
+        logFilePathPlusName = self.workingDir + "/" + self.logFilename
+        fileHandler = logging.FileHandler(filename = logFilePathPlusName, mode = "w")
+        fileHandler.setLevel(logging.DEBUG)
+
+        formatter = logging.Formatter('%(asctime)s %(levelname)s: %(message)s')
+        fileHandler.setFormatter(formatter)
+
+        self.logger.addHandler(fileHandler)
+
+        self.logger.info("WorkFlow created.")
 
     def add_accumulated_value(self, name):
         # Check if there is alread an ojbect which has the same name.

@@ -36,24 +36,24 @@ class MyWF(WorkFlow.WorkFlow):
         super(MyWF, self).initialize()
 
         # Custom code.
-        print("Initialized.")
+        self.logger.info("Initialized.")
 
     # Overload the function train().
     def train(self):
         super(MyWF, self).train()
 
         # Custom code.
-        print("Train loop #%d" % self.countTrain)
+        self.logger.info("Train loop #%d" % self.countTrain)
 
         # Test the existance of an AccumulatedValue object.
         if ( True == self.have_accumulated_value("loss") ):
             self.AV["loss"].push_back(0.01, self.countTrain)
         else:
-            print("Could not find \"loss\"")
+            self.logger.info("Could not find \"loss\"")
 
         self.countTrain += 1
 
-        print("Trained.")
+        self.logger.info("Trained.")
 
     # Overload the function test().
     def test(self):
@@ -64,16 +64,16 @@ class MyWF(WorkFlow.WorkFlow):
         if ( True == self.have_accumulated_value("lossTest") ):
             self.AV["lossTest"].push_back(0.01, self.countTest)
         else:
-            print("Could not find \"lossTest\"")
+            self.logger.info("Could not find \"lossTest\"")
 
-        print("Tested.")
+        self.logger.info("Tested.")
 
     # Overload the function finalize().
     def finalize(self):
         super(MyWF, self).finalize()
 
         # Custom code.
-        print("Finalized.")
+        self.logger.info("Finalized.")
 
 if __name__ == "__main__":
     print("Hello WorkFlow.")
