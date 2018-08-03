@@ -1,4 +1,6 @@
 
+from __future__ import print_function
+
 import os
 import logging
 
@@ -65,7 +67,7 @@ class AccumulatedValue(object):
                     self.stamp.append(0)
                     flagEmpty = False
                 else:
-                    self.stamp.append( self.stamp[-1 + 1] )
+                    self.stamp.append( self.stamp[-1] + 1 )
     
     def clear(self):
         self.acc   = []
@@ -101,6 +103,9 @@ class AccumulatedValue(object):
 class WorkFlow(object):
     def __init__(self, workingDir, logFilename = None):
         self.workingDir = workingDir # The working directory.
+
+        if ( not os.path.isdir(self.workingDir) ):
+            os.makedirs( self.workingDir )
 
         self.isInitialized = False
         self.AV = {"loss": AccumulatedValue("loss")}
