@@ -107,7 +107,9 @@ class AccumulatedValuePloter(object):
         self.avNameList = avNameList
     
     def update(self):
-        pass
+        # The method of the base class cannot be invoked.
+        exp = WFException("update() of AccumulatedValuedPloter base class could no be invoked directly.", "AccumulatedValuePloter")
+        raise(exp)
 
 class VisdomLinePloter(AccumulatedValuePloter):
     def __init__(self, name, av, avNameList):
@@ -117,8 +119,7 @@ class VisdomLinePloter(AccumulatedValuePloter):
 
     def update(self):
         # Check if it is the first point.
-
-        
+        pass
 
 class WorkFlow(object):
     def __init__(self, workingDir, logFilename = None):
