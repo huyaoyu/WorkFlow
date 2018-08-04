@@ -100,6 +100,26 @@ class AccumulatedValue(object):
         print("stamp: ")
         print(self.stamp)
 
+class AccumulatedValuePloter(object):
+    def __init__(self, name, av, avNameList):
+        self.name = name
+        self.AV         = av
+        self.avNameList = avNameList
+    
+    def update(self):
+        pass
+
+class VisdomLinePloter(AccumulatedValuePloter):
+    def __init__(self, name, av, avNameList):
+        super(VisdomLinePloter, self).__init__(name, av, avNameList)
+
+        self.count = 0
+
+    def update(self):
+        # Check if it is the first point.
+
+        
+
 class WorkFlow(object):
     def __init__(self, workingDir, logFilename = None):
         self.workingDir = workingDir # The working directory.
