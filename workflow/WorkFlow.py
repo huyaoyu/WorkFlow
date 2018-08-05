@@ -25,12 +25,19 @@ class WFException(Exception):
         return desc
 
 class AccumulatedValue(object):
-    def __init__(self, name, plotFlag = True):
+    def __init__(self, name, avgWidth = 2):
         self.name = name
-        self.plotEnabled = plotFlag
 
         self.acc   = []
         self.stamp = []
+
+        if ( avgWidth <= 0 ):
+            exp = WFException("Averaging width must be a positive integer.", "AccumulatedValue")
+            raise(exp)
+
+        self.avg      = []
+        self.avgWidth = avgWidth
+        self.avgCount = 0
 
         self.xLabel = "Stamp"
         self.yLabel = "Value"
@@ -45,6 +52,20 @@ class AccumulatedValue(object):
                 self.stamp.append(0)
             else:
                 self.stamp.append( self.stamp[-1] + 1 )
+        
+        # Calculate the average.
+        if ( 0 == len( self.avg ) ):
+            self.avg.append(v)
+            self.avgCount = 1
+        else:
+            if ( self.avgCount < self.avgWidth ):
+                self.avg.append(\
+                    ( self.avg[-1] * self.avgCount + self.acc[-1] ) / ( self.avgCount + 1 ) )
+                self.avgCount  += 1
+            else:
+                self.avg.append(\
+                    ( self.avg[-1] * self.avgCount - self.acc[ -1 - self.avgCount ] + self.acc[-1] ) / self.avgCount \
+                )
     
     def push_back_array(self, a, stamp = None):
         nA = len(a)
@@ -53,32 +74,23 @@ class AccumulatedValue(object):
         if ( stamp is not None ):
             nS = len(stamp)
         
-        if ( nA != nS ):
-            # This is an error.
-            desc = """Lengh of values should be the same with the length of the stamps.
-            len(a) = %d, len(stamp) = %d.""" % (nA, nS)
-            exp = WFException(desc, "push_back_array")
-            raise(exp)
+            if ( nA != nS ):
+                # This is an error.
+                desc = """Lengh of values should be the same with the length of the stamps.
+                len(a) = %d, len(stamp) = %d.""" % (nA, nS)
+                exp = WFException(desc, "push_back_array")
+                raise(exp)
 
-        for item in a:
-            self.acc.append(item)
-
-        flagEmpty = 0 == len(self.stamp)
-
-        if ( stamp is not None ):
-            for item in stamp:
-                self.stamp.append(item)
+            for i in range(nA):
+                self.push_back( a[i], stamp[i] )
         else:
             for i in range(nA):
-                if ( flagEmpty ):
-                    self.stamp.append(0)
-                    flagEmpty = False
-                else:
-                    self.stamp.append( self.stamp[-1] + 1 )
+                self.push_back( a[i] )
     
     def clear(self):
         self.acc   = []
         self.stamp = []
+        self.avg   = []
 
     def last(self):
         if ( 0 == len(self.acc) ):
@@ -98,20 +110,18 @@ class AccumulatedValue(object):
     def get_stamps(self):
         return self.stamp
 
+    def get_avg(self):
+        return self.avg
+
     def show_raw_data(self):
-        if ( True == self.plotEnabled ):
-            plotEnabledString = "True"
-        else:
-            plotEnabledString = "False"
-        
-        print("%s with plotEnabled = %s" % (self.name, plotEnabledString))
+        print("%s" % (self.name))
         print("acc: ")
         print(self.acc)
         print("stamp: ")
         print(self.stamp)
 
 class AccumulatedValuePlotter(object):
-    def __init__(self, name, av, avNameList):
+    def __init__(self, name, av, avNameList, avAvgFlagList = None):
         self.name       = name
         self.AV         = av
         self.avNameList = avNameList
@@ -124,6 +134,15 @@ class AccumulatedValuePlotter(object):
         initIndexList = [-1] * len( self.avNameList )
 
         self.plotIndexDict = dict( zip(self.avNameList, initIndexList) )
+
+        if ( avAvgFlagList is None ):
+            avAvgFlagList = [False] * len( self.avNameList )
+        else:
+            if ( len(self.avNameList) != len(avAvgFlagList) ):
+                exp = WFException("The lenght of avAvgFlagList should be the same with avNameList", "AccumulatedValuePlotter")
+                raise(exp)
+        
+        self.avAvgFlagDict = dict( zip(self.avNameList, avAvgFlagList) )
 
         self.title = self.name
         self.xlabel = "xlabel"
@@ -144,8 +163,8 @@ class VisdomLinePlotter(AccumulatedValuePlotter):
     vis = None
     visStartUpSec = 1
 
-    def __init__(self, name, av, avNameList):
-        super(VisdomLinePlotter, self).__init__(name, av, avNameList)
+    def __init__(self, name, av, avNameList, avAvgFlagList = None):
+        super(VisdomLinePlotter, self).__init__(name, av, avNameList, avAvgFlagList)
 
         self.count         = 0
         self.minPlotPoints = 2
@@ -184,7 +203,7 @@ class VisdomLinePlotter(AccumulatedValuePlotter):
             raise(exp)
 
         # Gather the data.
-        nLines = len( self.avNameList )
+        # nLines = len( self.avNameList )
         nMaxPoints = 0
 
         for name in self.avNameList:
@@ -251,6 +270,19 @@ class VisdomLinePlotter(AccumulatedValuePlotter):
                     )\
                 )
 
+            # Average line.
+            if ( True == self.avAvgFlagDict[name] ):
+                vis.line(\
+                    X = x[i],\
+                    Y = np.array( self.AV[name].get_avg()[ self.plotIndexDict[name] + 1 : ] ),\
+                    win = self.visLine,\
+                    name = name + "_avg",\
+                    update = "append",\
+                    opts = dict(\
+                        showlegend = True \
+                    )\
+                )
+
             # Update the self.plotIndexDict.
             self.plotIndexDict[name] = self.AV[name].get_num_values() - 1
         
@@ -303,7 +335,7 @@ class WorkFlow(object):
 
         self.logger.info("WorkFlow created.")
 
-    def add_accumulated_value(self, name):
+    def add_accumulated_value(self, name, avgWidth = 2):
         # Check if there is alread an ojbect which has the same name.
         if ( name in self.AV.keys() ):
             # This is an error.
@@ -312,7 +344,7 @@ class WorkFlow(object):
             raise(exp)
         
         # Name is new. Create a new AccumulatedValue object.
-        self.AV[name] = AccumulatedValue(name)
+        self.AV[name] = AccumulatedValue(name, avgWidth)
 
     def have_accumulated_value(self, name):
         return ( name in self.AV.keys() )

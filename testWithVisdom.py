@@ -23,17 +23,20 @@ class MyWF(WorkFlow.WorkFlow):
         super(MyWF, self).__init__(workingDir)
 
         # === Create the AccumulatedObjects. ===
-        self.add_accumulated_value("loss2")
+        self.add_accumulated_value("loss2", 10)
         self.add_accumulated_value("lossLeap")
+        self.add_accumulated_value("testAvg1", 10)
+        self.add_accumulated_value("testAvg2", 20)
         self.add_accumulated_value("lossTest")
         # This should raise an exception.
         # self.add_accumulated_value("loss")
 
         # === Create a AccumulatedValuePlotter object for ploting. ===
-        avNameList = ["loss", "loss2", "lossLeap"]
+        avNameList    = ["loss", "loss2", "lossLeap"]
+        avAvgFlagList = [  True,   False,     True ]
         self.AVP.append(\
             WorkFlow.VisdomLinePlotter(\
-                "Combined", self.AV, avNameList)\
+                "Combined", self.AV, avNameList, avAvgFlagList)\
         )
 
         self.AVP.append(\
@@ -43,14 +46,24 @@ class MyWF(WorkFlow.WorkFlow):
 
         self.AVP.append(\
             WorkFlow.VisdomLinePlotter(\
-                "losse", self.AV, ["loss2"])\
+                "losse", self.AV, ["loss2"], [True])\
         )
 
         self.AVP.append(\
             WorkFlow.VisdomLinePlotter(\
-                "lossLeap", self.AV, ["lossLeap"])\
+                "lossLeap", self.AV, ["lossLeap"], [True])\
         )
         self.AVP[-1].title = "Loss Leap"
+
+        self.AVP.append(\
+            WorkFlow.VisdomLinePlotter(\
+                "testAvg1", self.AV, ["testAvg1"], [True])
+        )
+
+        self.AVP.append(\
+            WorkFlow.VisdomLinePlotter(\
+                "testAvg2", self.AV, ["testAvg2"], [True])
+        )
 
         # === Custom member variables. ===
         self.countTrain = 0
@@ -84,6 +97,14 @@ class MyWF(WorkFlow.WorkFlow):
             self.AV["lossLeap"].push_back(\
                 math.sin( self.countTrain*0.1 + 0.25*math.pi ),\
                 self.countTrain*0.1)
+
+        # testAvg.
+        self.AV["testAvg1"].push_back( 0.5, self.countTrain )
+
+        if ( self.countTrain < 50 ):
+            self.AV["testAvg2"].push_back( self.countTrain, self.countTrain )
+        else:
+            self.AV["testAvg2"].push_back( 50, self.countTrain )
 
         self.countTrain += 1
 
