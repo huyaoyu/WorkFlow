@@ -221,8 +221,6 @@ class VisdomLinePlotter(AccumulatedValuePlotter):
         # Enough points to plot.
         # Get the points to be ploted.
         nameList = []
-        y        = []
-        x        = []
         for name in self.avNameList:
             av = self.AV[name]
             lastIdx = self.plotIndexDict[name]
@@ -230,8 +228,6 @@ class VisdomLinePlotter(AccumulatedValuePlotter):
 
             if ( pointsInAv - 1 > lastIdx and 0 != pointsInAv ):
                 nameList.append(name)
-                y.append( np.array( av.get_values()[ lastIdx + 1 : ] ) )
-                x.append( np.array( av.get_stamps()[ lastIdx + 1 : ] ) )
 
         if ( 0 == len( nameList ) ):
             # No update actions should be performed.
@@ -241,13 +237,17 @@ class VisdomLinePlotter(AccumulatedValuePlotter):
         vis = self.get_vis()
 
         for i in range( len(nameList) ):
-            name = nameList[i]
+            name    = nameList[i]
+            av      = self.AV[name]
+            lastIdx = self.plotIndexDict[name]
+
+            x = np.array( av.get_stamps()[ lastIdx + 1 : ] )
             
             if ( self.visLine is None ):
                 # Create the Visdom object.
                 self.visLine = vis.line(\
-                    X = x[i],\
-                    Y = y[i],\
+                    X = x,\
+                    Y = np.array( av.get_values()[ lastIdx + 1 : ] ),\
                     name = name,\
                     opts = dict(\
                         showlegend = True,\
@@ -260,8 +260,8 @@ class VisdomLinePlotter(AccumulatedValuePlotter):
             else:
                 # Append data to self.visLine.
                 vis.line(\
-                    X = x[i],\
-                    Y = y[i],\
+                    X = x,\
+                    Y = np.array( av.get_values()[ lastIdx + 1 : ] ),\
                     win = self.visLine,\
                     name = name,\
                     update = "append",\
@@ -270,10 +270,15 @@ class VisdomLinePlotter(AccumulatedValuePlotter):
                     )\
                 )
 
+        for i in range( len(nameList) ):
+            name    = nameList[i]
+            av      = self.AV[name]
+            lastIdx = self.plotIndexDict[name]
+
             # Average line.
             if ( True == self.avAvgFlagDict[name] ):
                 vis.line(\
-                    X = x[i],\
+                    X = np.array( av.get_stamps()[ lastIdx + 1 : ] ),\
                     Y = np.array( self.AV[name].get_avg()[ self.plotIndexDict[name] + 1 : ] ),\
                     win = self.visLine,\
                     name = name + "_avg",\
