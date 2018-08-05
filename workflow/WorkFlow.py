@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 
 import os
 import logging
+import matplotlib.pyplot as plt
 import numpy as np
 import time
 
@@ -120,6 +121,18 @@ class AccumulatedValue(object):
         print("stamp: ")
         print(self.stamp)
 
+    def dump(self, outDir):
+        # Convert acc and avg into NumPy arrays.
+        acc = np.column_stack( ( np.array(self.stamp).astype(np.float), np.array(self.acc).astype(np.float) ) )
+        avg = np.column_stack( ( np.array(self.stamp).astype(np.float), np.array(self.avg).astype(np.float) ) )
+
+        # Dump the files.
+        np.save(    outDir + "/" + self.name + ".npy", acc )
+        np.savetxt( outDir + "/" + self.name + ".txt", acc )
+
+        np.save(    outDir + "/" + self.name + "_avg.npy", avg )
+        np.savetxt( outDir + "/" + self.name + "_avg.txt", avg )
+
 class AccumulatedValuePlotter(object):
     def __init__(self, name, av, avNameList, avAvgFlagList = None):
         self.name       = name
@@ -157,6 +170,32 @@ class AccumulatedValuePlotter(object):
         # The method of the base class cannot be invoked.
         exp = WFException("update() of AccumulatedValuedPlotter base class could no be invoked directly.", "AccumulatedValuePlotter")
         raise(exp)
+    
+    def write_image(self, outDir):
+        fig, ax = plt.subplots( nrows=1, ncols=1 )
+        legend = []
+
+        for name in self.avNameList:
+            av = self.AV[name]
+
+            ax.plot( av.get_stamps(), av.get_values() )
+            legend.append( name )
+
+        for name in self.avNameList:
+            if ( True == self.avAvgFlagDict[name] ):
+                av = self.AV[name]
+
+                ax.plot( av.get_stamps(), av.get_avg() )
+
+                legend.append( name + "_avg" )
+        
+        ax.legend(legend)
+        ax.set_title( self.title )
+        ax.set_xlabel( self.xlabel )
+        ax.set_ylabel( self.ylabel )
+
+        fig.savefig(outDir + "/" + self.title + ".png")
+        plt.close(fig)
 
 class VisdomLinePlotter(AccumulatedValuePlotter):
     # Class/Static variables.
@@ -413,6 +452,12 @@ class WorkFlow(object):
             exp = WFException(desc, "finalize")
             raise(exp)
         
+        # Write the accumulated values.
+        self.write_accumulated_values()
+        self.draw_accumulated_values()
+
+        self.logger.info("Accumulated values are written to %s." % (self.workingDir + "/AccumulatedValues"))
+
         self.isInitialized = False
 
         self.debug_print("finalize() get called.")
@@ -423,6 +468,24 @@ class WorkFlow(object):
 
         for avp in self.AVP:
             avp.update()
+
+    def write_accumulated_values(self):
+        outDir = self.workingDir + "/AccumulatedValues"
+
+        if ( False == os.path.isdir( outDir ) ):
+            os.makedirs( outDir )
+
+        for av in self.AV.itervalues():
+            av.dump(outDir)
+
+    def draw_accumulated_values(self):
+        outDir = self.workingDir + "/AccumulatedValues"
+
+        if ( False == os.path.isdir( outDir ) ):
+            os.makedirs( outDir )
+
+        for avp in self.AVP:
+            avp.write_image(outDir)
 
     def is_initialized(self):
         return self.isInitialized

@@ -106,6 +106,9 @@ class MyWF(WorkFlow.WorkFlow):
         else:
             self.AV["testAvg2"].push_back( 50, self.countTrain )
 
+        if ( self.countTrain % 10 == 0 ):
+            self.write_accumulated_values()
+
         self.countTrain += 1
 
         # Plot accumulated values.
