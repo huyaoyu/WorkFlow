@@ -33,7 +33,7 @@ class MyWF(WorkFlow.WorkFlow):
 
         # === Create a AccumulatedValuePlotter object for ploting. ===
         avNameList    = ["loss", "loss2", "lossLeap"]
-        avAvgFlagList = [  True,   False,     True ]
+        avAvgFlagList = [  True,   False,      True ]
         self.AVP.append(\
             WorkFlow.VisdomLinePlotter(\
                 "Combined", self.AV, avNameList, avAvgFlagList)\
@@ -57,12 +57,12 @@ class MyWF(WorkFlow.WorkFlow):
 
         self.AVP.append(\
             WorkFlow.VisdomLinePlotter(\
-                "testAvg1", self.AV, ["testAvg1"], [True])
+                "testAvg1", self.AV, ["testAvg1"], [True])\
         )
 
         self.AVP.append(\
             WorkFlow.VisdomLinePlotter(\
-                "testAvg2", self.AV, ["testAvg2"], [True])
+                "testAvg2", self.AV, ["testAvg2"], [True])\
         )
 
         # === Custom member variables. ===
