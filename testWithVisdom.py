@@ -2,6 +2,9 @@
 
 from __future__ import print_function
 
+import math
+import time
+
 from workflow import WorkFlow
 
 def print_delimeter(c = "=", n = 20, title = "", leading = "\n", ending = "\n"):
@@ -20,9 +23,34 @@ class MyWF(WorkFlow.WorkFlow):
         super(MyWF, self).__init__(workingDir)
 
         # === Create the AccumulatedObjects. ===
+        self.add_accumulated_value("loss2")
+        self.add_accumulated_value("lossLeap")
         self.add_accumulated_value("lossTest")
         # This should raise an exception.
         # self.add_accumulated_value("loss")
+
+        # === Create a AccumulatedValuePlotter object for ploting. ===
+        avNameList = ["loss", "loss2", "lossLeap"]
+        self.AVP.append(\
+            WorkFlow.VisdomLinePlotter(\
+                "Combined", self.AV, avNameList)\
+        )
+
+        self.AVP.append(\
+            WorkFlow.VisdomLinePlotter(\
+                "loss", self.AV, ["loss"])\
+        )
+
+        self.AVP.append(\
+            WorkFlow.VisdomLinePlotter(\
+                "losse", self.AV, ["loss2"])\
+        )
+
+        self.AVP.append(\
+            WorkFlow.VisdomLinePlotter(\
+                "lossLeap", self.AV, ["lossLeap"])\
+        )
+        self.AVP[-1].title = "Loss Leap"
 
         # === Custom member variables. ===
         self.countTrain = 0
@@ -44,13 +72,27 @@ class MyWF(WorkFlow.WorkFlow):
 
         # Test the existance of an AccumulatedValue object.
         if ( True == self.have_accumulated_value("loss") ):
-            self.AV["loss"].push_back(0.01, self.countTrain)
+            self.AV["loss"].push_back(math.sin( self.countTrain*0.1 ), self.countTrain*0.1)
         else:
             self.logger.info("Could not find \"loss\"")
 
+        # Directly access "loss2" without existance test.
+        self.AV["loss2"].push_back(math.cos( self.countTrain*0.1 ), self.countTrain*0.1)
+
+        # lossLeap.
+        if ( self.countTrain % 10 == 0 ):
+            self.AV["lossLeap"].push_back(\
+                math.sin( self.countTrain*0.1 + 0.25*math.pi ),\
+                self.countTrain*0.1)
+
         self.countTrain += 1
 
+        # Plot accumulated values.
+        self.plot_accumulated_values()
+
         self.logger.info("Trained.")
+
+        time.sleep(0.05)
 
     # Overload the function test().
     def test(self):
@@ -77,60 +119,37 @@ if __name__ == "__main__":
 
     print_delimeter(title = "Before initialization.")
 
-    # Instantiate an object for MyWF.
-
-    wf = MyWF("/tmp/WorkFlowDir")
-
-    wf.verbose = True
-
-    # Trigger an exception.
     try:
-        wf.train()
-    except WorkFlow.WFException as exp:
-        print(exp.describe())
+        # Instantiate an object for MyWF.
+        wf = MyWF("/tmp/WorkFlowDir")
+        wf.verbose = True
 
-    # Trigger an exception.
-    try:
-        wf.test()
-    except WorkFlow.WFException as exp:
-        print(exp.describe())
-
-    # Trigger an exception.
-    try:
-        wf.finalize()
-    except WorkFlow.WFException as exp:
-        print(exp.describe())
-
-    # Actual initialization.
-    print_delimeter(title = "Initialize.")
-
-    wf.initialize()
-
-    # Trigger an exception.
-    try:
+        # Initialization.
+        print_delimeter(title = "Initialize.")
         wf.initialize()
-    except WorkFlow.WFException as exp:
-        print(exp.describe())
 
-    # Training loop.
-    print_delimeter(title = "Loop.")
+        # Training loop.
+        print_delimeter(title = "Loop.")
 
-    for i in range(5):
-        wf.train()
+        for i in range(100):
+            wf.train()
 
-    # Test and finalize.
-    print_delimeter(title = "Test and finalize.")
+        # Test and finalize.
+        print_delimeter(title = "Test and finalize.")
 
-    wf.test()
-    wf.finalize()
+        wf.test()
+        wf.finalize()
 
-    # Show the accululated values.
-    print_delimeter(title = "Accumulated values.")
+        # # Show the accululated values.
+        # print_delimeter(title = "Accumulated values.")
+        # wf.AV["loss"].show_raw_data()
 
-    wf.AV["loss"].show_raw_data()
+        # print_delimeter()
+        # wf.AV["lossLeap"].show_raw_data()
 
-    print_delimeter()
-
-    wf.AV["lossTest"].show_raw_data()
+        # print_delimeter()
+        # wf.AV["lossTest"].show_raw_data()
+    except WorkFlow.WFException as e:
+        print( e.describe() )
 
     print("Done.")

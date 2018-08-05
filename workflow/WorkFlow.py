@@ -1,8 +1,15 @@
 
+from __future__ import absolute_import
+from __future__ import division
 from __future__ import print_function
+from __future__ import unicode_literals
 
 import os
 import logging
+import numpy as np
+import time
+
+from visdom import Visdom
 
 class WFException(Exception):
     def __init__(self, message, name = None):
@@ -82,6 +89,9 @@ class AccumulatedValue(object):
 
         return self.acc[-1]
 
+    def get_num_values(self):
+        return len( self.acc )
+
     def get_values(self):
         return self.acc
 
@@ -100,26 +110,151 @@ class AccumulatedValue(object):
         print("stamp: ")
         print(self.stamp)
 
-class AccumulatedValuePloter(object):
+class AccumulatedValuePlotter(object):
     def __init__(self, name, av, avNameList):
-        self.name = name
+        self.name       = name
         self.AV         = av
         self.avNameList = avNameList
+
+        if ( 0 == len( self.avNameList ) ):
+            exp = WFException("The avNameList is empty.", "AccumulatedValuePlotter")
+            raise(exp)
+
+        # Pack the avNameList in to index dictionary.
+        initIndexList = [-1] * len( self.avNameList )
+
+        self.plotIndexDict = dict( zip(self.avNameList, initIndexList) )
+
+        self.title = self.name
+        self.xlabel = "xlabel"
+        self.ylabel = "ylabel"
     
-    def update(self):
+    def initialize(self):
         # The method of the base class cannot be invoked.
-        exp = WFException("update() of AccumulatedValuedPloter base class could no be invoked directly.", "AccumulatedValuePloter")
+        exp = WFException("initialize() of AccumulatedValuedPlotter base class could no be invoked directly.", "AccumulatedValuePlotter")
         raise(exp)
 
-class VisdomLinePloter(AccumulatedValuePloter):
-    def __init__(self, name, av, avNameList):
-        super(VisdomLinePloter, self).__init__(name, av, avNameList)
+    def update(self):
+        # The method of the base class cannot be invoked.
+        exp = WFException("update() of AccumulatedValuedPlotter base class could no be invoked directly.", "AccumulatedValuePlotter")
+        raise(exp)
 
-        self.count = 0
+class VisdomLinePlotter(AccumulatedValuePlotter):
+    # Class/Static variables.
+    vis = None
+    visStartUpSec = 1
+
+    def __init__(self, name, av, avNameList):
+        super(VisdomLinePlotter, self).__init__(name, av, avNameList)
+
+        self.count         = 0
+        self.minPlotPoints = 2
+
+        self.visLine = None
+
+    def initialize(self):
+        if ( VisdomLinePlotter.vis is not None ):
+            print("visdom already initialized.")
+            return
+
+        VisdomLinePlotter.vis = Visdom(server = 'http://localhost', port = 8097)
+
+        while not VisdomLinePlotter.vis.check_connection() and VisdomLinePlotter.visStartUpSec > 0:
+            time.sleep(0.1)
+            VisdomLinePlotter.visStartUpSec -= 0.1
+        assert VisdomLinePlotter.vis.check_connection(), 'No connection could be formed quickly'
+
+        print("VisdomLinePlotter initialized.")
+
+    def get_vis(self):
+        return VisdomLinePlotter.vis
+    
+    def is_initialized(self):
+        vis = self.get_vis()
+
+        if ( vis is None ):
+            return False
+        else:
+            return True
 
     def update(self):
-        # Check if it is the first point.
-        pass
+        # Check if Visdom is initialized.
+        if ( False == self.is_initialized() ):
+            exp = WFException("Visdom has not been initialized yet.", "update")
+            raise(exp)
+
+        # Gather the data.
+        nLines = len( self.avNameList )
+        nMaxPoints = 0
+
+        for name in self.avNameList:
+            # Find the AccumulatedVariable object.
+            av = self.AV[name]
+            nPoints = av.get_num_values()
+
+            if ( nPoints > nMaxPoints ):
+                nMaxPoints = nPoints
+        
+        if ( nMaxPoints < self.minPlotPoints ):
+            # Not enough points to plot, do nothing.
+            return
+        
+        # Enough points to plot.
+        # Get the points to be ploted.
+        nameList = []
+        y        = []
+        x        = []
+        for name in self.avNameList:
+            av = self.AV[name]
+            lastIdx = self.plotIndexDict[name]
+            pointsInAv = av.get_num_values()
+
+            if ( pointsInAv - 1 > lastIdx and 0 != pointsInAv ):
+                nameList.append(name)
+                y.append( np.array( av.get_values()[ lastIdx + 1 : ] ) )
+                x.append( np.array( av.get_stamps()[ lastIdx + 1 : ] ) )
+
+        if ( 0 == len( nameList ) ):
+            # No update actions should be performed.
+            return
+
+        # Retreive the Visdom object.
+        vis = self.get_vis()
+
+        for i in range( len(nameList) ):
+            name = nameList[i]
+            
+            if ( self.visLine is None ):
+                # Create the Visdom object.
+                self.visLine = vis.line(\
+                    X = x[i],\
+                    Y = y[i],\
+                    name = name,\
+                    opts = dict(\
+                        showlegend = True,\
+                        title = self.title,\
+                        xlabel = self.xlabel,\
+                        ylabel = self.ylabel,\
+                        margintop=30 \
+                    )\
+                )
+            else:
+                # Append data to self.visLine.
+                vis.line(\
+                    X = x[i],\
+                    Y = y[i],\
+                    win = self.visLine,\
+                    name = name,\
+                    update = "append",\
+                    opts = dict(\
+                        showlegend = True \
+                    )\
+                )
+
+            # Update the self.plotIndexDict.
+            self.plotIndexDict[name] = self.AV[name].get_num_values() - 1
+        
+        self.count += 1
 
 class WorkFlow(object):
     def __init__(self, workingDir, logFilename = None):
@@ -129,7 +264,13 @@ class WorkFlow(object):
             os.makedirs( self.workingDir )
 
         self.isInitialized = False
+
+        # Accumulated value dictionary.
         self.AV = {"loss": AccumulatedValue("loss")}
+
+        # Accumulated value Plotter.
+        # self.AVP should be an object of class AccumulatedValuePlotter.
+        self.AVP = [] # The child class is responsible to populate this member.
 
         self.verbose = False
 
@@ -201,6 +342,11 @@ class WorkFlow(object):
             exp = WFException(desc, "initialize")
             raise(exp)
 
+        # Initialize AVP.
+        if ( len(self.AVP) > 0 ):
+            self.AVP[0].initialize()
+            self.logger.info("AVP initialized.")
+
         self.isInitialized = True
 
         self.debug_print("initialize() get called.")
@@ -233,6 +379,13 @@ class WorkFlow(object):
         self.isInitialized = False
 
         self.debug_print("finalize() get called.")
+
+    def plot_accumulated_values(self):
+        if ( 0 == len(self.AVP) ):
+            return
+
+        for avp in self.AVP:
+            avp.update()
 
     def is_initialized(self):
         return self.isInitialized
