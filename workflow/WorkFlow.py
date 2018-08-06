@@ -121,17 +121,17 @@ class AccumulatedValue(object):
         print("stamp: ")
         print(self.stamp)
 
-    def dump(self, outDir):
+    def dump(self, outDir, prefix = "", suffix = ""):
         # Convert acc and avg into NumPy arrays.
         acc = np.column_stack( ( np.array(self.stamp).astype(np.float), np.array(self.acc).astype(np.float) ) )
         avg = np.column_stack( ( np.array(self.stamp).astype(np.float), np.array(self.avg).astype(np.float) ) )
 
         # Dump the files.
-        np.save(    outDir + "/" + self.name + ".npy", acc )
-        np.savetxt( outDir + "/" + self.name + ".txt", acc )
+        np.save(    outDir + "/" + prefix + self.name + suffix + ".npy", acc )
+        np.savetxt( outDir + "/" + prefix + self.name + suffix + ".txt", acc )
 
-        np.save(    outDir + "/" + self.name + "_avg.npy", avg )
-        np.savetxt( outDir + "/" + self.name + "_avg.txt", avg )
+        np.save(    outDir + "/" + prefix + self.name + suffix + "_avg.npy", avg )
+        np.savetxt( outDir + "/" + prefix + self.name + suffix + "_avg.txt", avg )
 
 class AccumulatedValuePlotter(object):
     def __init__(self, name, av, avNameList, avAvgFlagList = None):
@@ -171,7 +171,7 @@ class AccumulatedValuePlotter(object):
         exp = WFException("update() of AccumulatedValuedPlotter base class could no be invoked directly.", "AccumulatedValuePlotter")
         raise(exp)
     
-    def write_image(self, outDir):
+    def write_image(self, outDir, prefix = "", suffix = ""):
         fig, ax = plt.subplots( nrows=1, ncols=1 )
         legend = []
 
@@ -194,7 +194,7 @@ class AccumulatedValuePlotter(object):
         ax.set_xlabel( self.xlabel )
         ax.set_ylabel( self.ylabel )
 
-        fig.savefig(outDir + "/" + self.title + ".png")
+        fig.savefig(outDir + "/" + prefix + self.title + suffix + ".png")
         plt.close(fig)
 
 class VisdomLinePlotter(AccumulatedValuePlotter):
@@ -333,8 +333,10 @@ class VisdomLinePlotter(AccumulatedValuePlotter):
         self.count += 1
 
 class WorkFlow(object):
-    def __init__(self, workingDir, logFilename = None):
+    def __init__(self, workingDir, prefix = "", suffix = "", logFilename = None):
         self.workingDir = workingDir # The working directory.
+        self.prefix = prefix
+        self.suffix = suffix
 
         if ( not os.path.isdir(self.workingDir) ):
             os.makedirs( self.workingDir )
@@ -469,23 +471,25 @@ class WorkFlow(object):
         for avp in self.AVP:
             avp.update()
 
-    def write_accumulated_values(self):
-        outDir = self.workingDir + "/AccumulatedValues"
+    def write_accumulated_values(self, outDir = None):
+        if ( outDir is None ):
+            outDir = self.workingDir + "/AccumulatedValues"
 
         if ( False == os.path.isdir( outDir ) ):
             os.makedirs( outDir )
 
         for av in self.AV.itervalues():
-            av.dump(outDir)
+            av.dump(outDir, self.prefix, self.suffix)
 
-    def draw_accumulated_values(self):
-        outDir = self.workingDir + "/AccumulatedValues"
+    def draw_accumulated_values(self, outDir = None):
+        if ( outDir is None ):
+            outDir = self.workingDir + "/AccumulatedValues"
 
         if ( False == os.path.isdir( outDir ) ):
             os.makedirs( outDir )
 
         for avp in self.AVP:
-            avp.write_image(outDir)
+            avp.write_image(outDir, self.prefix, self.suffix)
 
     def is_initialized(self):
         return self.isInitialized

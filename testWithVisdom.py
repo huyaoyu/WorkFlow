@@ -19,8 +19,8 @@ def print_delimeter(c = "=", n = 20, title = "", leading = "\n", ending = "\n"):
 
 # Template for custom WorkFlow object.
 class MyWF(WorkFlow.WorkFlow):
-    def __init__(self, workingDir):
-        super(MyWF, self).__init__(workingDir)
+    def __init__(self, workingDir, prefix = "", suffix = ""):
+        super(MyWF, self).__init__(workingDir, prefix, suffix)
 
         # === Create the AccumulatedObjects. ===
         self.add_accumulated_value("loss2", 10)
@@ -141,11 +141,11 @@ class MyWF(WorkFlow.WorkFlow):
 if __name__ == "__main__":
     print("Hello WorkFlow.")
 
-    print_delimeter(title = "Before initialization.")
+    print_delimeter(title = "Before initialization." )
 
     try:
         # Instantiate an object for MyWF.
-        wf = MyWF("/tmp/WorkFlowDir")
+        wf = MyWF("/tmp/WorkFlowDir", prefix = "prefix_", suffix = "_suffix")
         wf.verbose = True
 
         # Initialization.
