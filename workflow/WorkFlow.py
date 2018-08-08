@@ -11,6 +11,7 @@ import numpy as np
 import time
 
 from visdom import Visdom
+import torch
 
 class WFException(Exception):
     def __init__(self, message, name = None):
@@ -130,8 +131,8 @@ class AccumulatedValue(object):
         np.save(    outDir + "/" + prefix + self.name + suffix + ".npy", acc )
         np.savetxt( outDir + "/" + prefix + self.name + suffix + ".txt", acc )
 
-        np.save(    outDir + "/" + prefix + self.name + suffix + "_avg.npy", avg )
-        np.savetxt( outDir + "/" + prefix + self.name + suffix + "_avg.txt", avg )
+        # np.save(    outDir + "/" + prefix + self.name + suffix + "_avg.npy", avg )
+        # np.savetxt( outDir + "/" + prefix + self.name + suffix + "_avg.txt", avg )
 
 class AccumulatedValuePlotter(object):
     def __init__(self, name, av, avNameList, avAvgFlagList = None):
@@ -338,8 +339,21 @@ class WorkFlow(object):
         self.prefix = prefix
         self.suffix = suffix
 
+        self.logdir = os.path.join(self.workingDir, 'logdata')
+        self.imgdir = os.path.join(self.workingDir, 'resimg') 
+        self.modeldir = os.path.join(self.workingDir, 'models') 
+
         if ( not os.path.isdir(self.workingDir) ):
             os.makedirs( self.workingDir )
+
+        if ( not os.path.isdir(self.logdir) ):
+            os.makedirs( self.logdir)
+
+        if ( not os.path.isdir(self.imgdir) ):
+            os.makedirs( self.imgdir)
+
+        if ( not os.path.isdir(self.modeldir) ):
+            os.makedirs( self.modeldir)
 
         self.isInitialized = False
 
@@ -355,7 +369,7 @@ class WorkFlow(object):
         if ( logFilename is not None ):
             self.logFilename = logFilename
         else:
-            self.logFilename = "wf.log"
+            self.logFilename = self.prefix + "wf" + self.suffix +".log"
         
         # Logger.
         # logging.basicConfig(datefmt = '%m/%d/%Y %I:%M:%S')
@@ -370,7 +384,7 @@ class WorkFlow(object):
 
         self.logger.addHandler(streamHandler)
 
-        logFilePathPlusName = self.workingDir + "/" + self.logFilename
+        logFilePathPlusName = os.path.join(self.logdir, self.logFilename)
         fileHandler = logging.FileHandler(filename = logFilePathPlusName, mode = "w")
         fileHandler.setLevel(logging.DEBUG)
 
@@ -473,7 +487,7 @@ class WorkFlow(object):
 
     def write_accumulated_values(self, outDir = None):
         if ( outDir is None ):
-            outDir = self.workingDir + "/AccumulatedValues"
+            outDir = self.logdir
 
         if ( False == os.path.isdir( outDir ) ):
             os.makedirs( outDir )
@@ -483,7 +497,7 @@ class WorkFlow(object):
 
     def draw_accumulated_values(self, outDir = None):
         if ( outDir is None ):
-            outDir = self.workingDir + "/AccumulatedValues"
+            outDir = self.imgdir
 
         if ( False == os.path.isdir( outDir ) ):
             os.makedirs( outDir )
@@ -497,3 +511,30 @@ class WorkFlow(object):
     def debug_print(self, msg):
         if ( True == self.verbose ):
             print(msg)
+
+    def print_delimeter(c = "=", n = 20, title = "", leading = "\n", ending = "\n"):
+        d = [c for i in range(n/2)]
+
+        if ( 0 == len(title) ):
+            s = "".join(d) + "".join(d)
+        else:
+            s = "".join(d) + " " + title + " " + "".join(d)
+
+        print("%s%s%s" % (leading, s, ending))
+
+    def load_model(model, modelname):
+        preTrainDict = torch.load(modelname)
+        model_dict = model.state_dict()
+        # print 'preTrainDict:',preTrainDict.keys()
+        # print 'modelDict:',model_dict.keys()
+        preTrainDict = {k:v for k,v in preTrainDict.items() if k in model_dict}
+        for item in preTrainDict:
+            print('  Load pretrained layer: ',item )
+        model_dict.update(preTrainDict)
+        model.load_state_dict(model_dict)
+        return model
+
+    def save_model(model, modelname):
+        torch.save(model.state_dict(), os.path.join(self.modeldir, modelname))
+
+# TODO: add snapshot to workflow

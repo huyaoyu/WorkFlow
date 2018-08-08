@@ -145,7 +145,7 @@ if __name__ == "__main__":
 
     try:
         # Instantiate an object for MyWF.
-        wf = MyWF("/tmp/WorkFlowDir", prefix = "prefix_", suffix = "_suffix")
+        wf = MyWF("./", prefix = "1_1_", suffix = "")
         wf.verbose = True
 
         # Initialization.
