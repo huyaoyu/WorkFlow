@@ -12,6 +12,7 @@ import time
 
 from visdom import Visdom
 import torch
+import sys
 
 class WFException(Exception):
     def __init__(self, message, name = None):
@@ -102,6 +103,15 @@ class AccumulatedValue(object):
             raise(exp)
 
         return self.acc[-1]
+
+    def last_avg(self):
+        if ( 0 == len(self.avg) ):
+            # This is an error.
+            desc = "The length of the current accumulated values is zero."
+            exp = WFException(desc, "last")
+            raise(exp)
+
+        return self.avg[-1]
 
     def get_num_values(self):
         return len( self.acc )
@@ -335,6 +345,7 @@ class VisdomLinePlotter(AccumulatedValuePlotter):
 
 class WorkFlow(object):
     def __init__(self, workingDir, prefix = "", suffix = "", logFilename = None):
+        # Add the current path to system path        
         self.workingDir = workingDir # The working directory.
         self.prefix = prefix
         self.suffix = suffix
@@ -512,7 +523,7 @@ class WorkFlow(object):
         if ( True == self.verbose ):
             print(msg)
 
-    def print_delimeter(c = "=", n = 20, title = "", leading = "\n", ending = "\n"):
+    def print_delimeter(self, c = "=", n = 20, title = "", leading = "\n", ending = "\n"):
         d = [c for i in range(n/2)]
 
         if ( 0 == len(title) ):
@@ -522,7 +533,7 @@ class WorkFlow(object):
 
         print("%s%s%s" % (leading, s, ending))
 
-    def load_model(model, modelname):
+    def load_model(self, model, modelname):
         preTrainDict = torch.load(modelname)
         model_dict = model.state_dict()
         # print 'preTrainDict:',preTrainDict.keys()
@@ -534,7 +545,17 @@ class WorkFlow(object):
         model.load_state_dict(model_dict)
         return model
 
-    def save_model(model, modelname):
+    def save_model(self, model, modelname):
+        modelname = self.prefix + modelname + self.suffix + '.pkl'
         torch.save(model.state_dict(), os.path.join(self.modeldir, modelname))
+
+    def get_log_str(self):
+        logstr = ''
+        for key in self.AV.keys():
+            try: 
+                logstr += '%s: %.5f ' % (key, self.AV[key].last_avg())
+            except WFException as e:
+                continue
+        return logstr
 
 # TODO: add snapshot to workflow

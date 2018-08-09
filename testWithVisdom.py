@@ -81,8 +81,6 @@ class MyWF(WorkFlow.WorkFlow):
         super(MyWF, self).train()
 
         # === Custom code. ===
-        self.logger.info("Train loop #%d" % self.countTrain)
-
         # Test the existance of an AccumulatedValue object.
         if ( True == self.have_accumulated_value("loss") ):
             self.AV["loss"].push_back(math.sin( self.countTrain*0.1 ), self.countTrain*0.1)
@@ -114,6 +112,7 @@ class MyWF(WorkFlow.WorkFlow):
         # Plot accumulated values.
         self.plot_accumulated_values()
 
+        self.logger.info("Train loop #%d %s" % (self.countTrain, self.get_log_str()))
         self.logger.info("Trained.")
 
         time.sleep(0.05)
