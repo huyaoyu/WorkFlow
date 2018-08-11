@@ -201,11 +201,12 @@ class AccumulatedValuePlotter(object):
                 legend.append( name + "_avg" )
         
         ax.legend(legend)
+        ax.grid()
         ax.set_title( self.title )
         ax.set_xlabel( self.xlabel )
         ax.set_ylabel( self.ylabel )
 
-        fig.savefig(outDir + "/" + prefix + self.title + suffix + ".png")
+        fig.savefig(outDir + "/" + self.title + suffix + ".png")
         plt.close(fig)
 
 class VisdomLinePlotter(AccumulatedValuePlotter):
@@ -450,6 +451,10 @@ class WorkFlow(object):
             self.AVP[0].initialize()
             self.logger.info("AVP initialized.")
 
+        # add prefix to AVP
+        for avp in self.AVP:
+            avp.title = self.prefix + avp.title
+
         self.isInitialized = True
 
         self.debug_print("initialize() get called.")
@@ -460,7 +465,7 @@ class WorkFlow(object):
             desc = "The work flow is not initialized yet."
             exp = WFException(desc, "tain")
             raise(exp)
-        
+
         self.debug_print("train() get called.")
 
     def test(self):
