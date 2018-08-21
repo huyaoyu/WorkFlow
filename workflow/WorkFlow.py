@@ -28,14 +28,14 @@ from flask.logging import default_handler
 DASH_APP = dash.Dash()
 DASH_APP.server.logger.removeHandler(default_handler)
 
-# Handle the default logger of dash (flask)
-flaskLogger = logging.getLogger( "werkzeug" )
+# # Handle the default logger of dash (flask)
+# flaskLogger = logging.getLogger( "werkzeug" )
 
-flaskFileHandler = logging.FileHandler(filename = "./FlaskLog.log", mode = "w")
-flaskFileHandler.setLevel(logging.DEBUG)
+# flaskFileHandler = logging.FileHandler(filename = "./FlaskLog.log", mode = "w")
+# flaskFileHandler.setLevel(logging.DEBUG)
 
-flaskLogger.handlers = []
-flaskLogger.addHandler( flaskFileHandler )
+# flaskLogger.handlers = []
+# flaskLogger.addHandler( flaskFileHandler )
 
 sys.stderr = open('./HttpLog.log', 'w')
 
