@@ -4,13 +4,85 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-import os
 import logging
 import matplotlib.pyplot as plt
 import numpy as np
+import os
+import sys
+import threading
 import time
 
+# Visdom.
 from visdom import Visdom
+
+# Dash.
+import dash
+import dash_core_components as dcc
+import dash_html_components as html
+from dash.dependencies import Input, Output
+from flask import request
+from flask.logging import default_handler
+
+# ============= Dash. ===========================
+
+DASH_APP = dash.Dash()
+DASH_APP.server.logger.removeHandler(default_handler)
+
+# Handle the default logger of dash (flask)
+flaskLogger = logging.getLogger( "werkzeug" )
+
+flaskFileHandler = logging.FileHandler(filename = "./FlaskLog.log", mode = "w")
+flaskFileHandler.setLevel(logging.DEBUG)
+
+flaskLogger.handlers = []
+flaskLogger.addHandler( flaskFileHandler )
+
+sys.stderr = open('./HttpLog.log', 'w')
+
+# Shutdown method. Copied from:
+# https://stackoverflow.com/questions/15562446/how-to-stop-flask-application-without-using-ctrl-c
+def shutdown_server():
+    func = request.environ.get('werkzeug.server.shutdown')
+    if func is None:
+        raise RuntimeError('Not running with the Werkzeug Server')
+    func()
+
+@DASH_APP.server.route('/shutdown', methods=['POST'])
+def shutdown():
+    shutdown_server()
+    return 'Server shutting down...'
+
+DASH_APP.layout = html.Div([
+    dcc.Input(id='my-id', value='initial value', type='text'),
+    html.Div(id='my-div', children="Children.")
+])
+
+@DASH_APP.callback(
+    Output(component_id='my-div', component_property='children'),
+    [Input(component_id='my-id', component_property='value')]
+)
+def update_output_div(input_value):
+	
+	print(input_value)
+
+	if ( "q" == input_value[-1] ):
+		print("quit")
+		shutdown()
+		return
+
+	ret = "You\'ve entered {}".format(input_value)
+	return ret
+
+class DashThread(threading.Thread):
+    """docstring for DashThread"""
+    def __init__(self, name, app):
+        super(DashThread, self).__init__()
+        self.name = name
+        self.app = app
+	
+    def run(self):
+        self.app.run_server()
+        print("%s: Dass app ends." % (self.name))
 
 class WFException(Exception):
     def __init__(self, message, name = None):
@@ -333,6 +405,9 @@ class VisdomLinePlotter(AccumulatedValuePlotter):
         self.count += 1
 
 class WorkFlow(object):
+    # Dash object.
+    dashAppThread = None
+
     def __init__(self, workingDir, prefix = "", suffix = "", logFilename = None):
         self.workingDir = workingDir # The working directory.
         self.prefix = prefix
@@ -362,7 +437,7 @@ class WorkFlow(object):
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.DEBUG)
 
-        streamHandler = logging.StreamHandler()
+        streamHandler = logging.StreamHandler(sys.stdout)
         streamHandler.setLevel(logging.DEBUG)
 
         formatter = logging.Formatter('%(levelname)s: %(message)s')
@@ -378,6 +453,10 @@ class WorkFlow(object):
         fileHandler.setFormatter(formatter)
 
         self.logger.addHandler(fileHandler)
+
+        # Dash thread object.
+        if ( WorkFlow.dashAppThread is None ):
+            WorkFlow.dashAppThread = DashThread("Dash", DASH_APP)
 
         self.logger.info("WorkFlow created.")
 
@@ -425,6 +504,9 @@ class WorkFlow(object):
             self.AVP[0].initialize()
             self.logger.info("AVP initialized.")
 
+        # Create Dash thread.
+        WorkFlow.dashAppThread.start()
+
         self.isInitialized = True
 
         self.debug_print("initialize() get called.")
@@ -459,6 +541,9 @@ class WorkFlow(object):
         self.draw_accumulated_values()
 
         self.logger.info("Accumulated values are written to %s." % (self.workingDir + "/AccumulatedValues"))
+
+        # Dash thread.
+        WorkFlow.dashAppThread.join()
 
         self.isInitialized = False
 
