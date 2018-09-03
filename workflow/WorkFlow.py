@@ -9,6 +9,7 @@ import logging
 import matplotlib.pyplot as plt
 import numpy as np
 import time
+import sys
 
 from visdom import Visdom
 
@@ -215,7 +216,7 @@ class VisdomLinePlotter(AccumulatedValuePlotter):
             print("visdom already initialized.")
             return
 
-        VisdomLinePlotter.vis = Visdom(server = 'http://localhost', port = 8097)
+        VisdomLinePlotter.vis = Visdom(server = 'http://localhost', port = 8097, use_incoming_socket = False)
 
         while not VisdomLinePlotter.vis.check_connection() and VisdomLinePlotter.visStartUpSec > 0:
             time.sleep(0.1)
@@ -478,8 +479,12 @@ class WorkFlow(object):
         if ( False == os.path.isdir( outDir ) ):
             os.makedirs( outDir )
 
-        for av in self.AV.itervalues():
-            av.dump(outDir, self.prefix, self.suffix)
+        if ( sys.version_info[0] < 3 ):
+            for av in self.AV.itervalues():
+                av.dump(outDir, self.prefix, self.suffix)
+        else:
+            for av in self.AV.values():
+                av.dump(outDir, self.prefix, self.suffix)
 
     def draw_accumulated_values(self, outDir = None):
         if ( outDir is None ):
