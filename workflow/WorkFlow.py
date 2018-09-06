@@ -9,6 +9,7 @@ import logging
 import matplotlib.pyplot as plt
 import numpy as np
 import time
+import signal
 import sys
 
 from visdom import Visdom
@@ -25,6 +26,10 @@ class WFException(Exception):
             desc = self.message
     
         return desc
+
+class SigIntException(WFException):
+    def __init__(self, message, name = None):
+        super(SigIntException, self).__init__( message, name )
 
 class AccumulatedValue(object):
     def __init__(self, name, avgWidth = 2):
@@ -203,13 +208,18 @@ class VisdomLinePlotter(AccumulatedValuePlotter):
     vis = None
     visStartUpSec = 1
 
-    def __init__(self, name, av, avNameList, avAvgFlagList = None):
+    def __init__(self, name, av, avNameList, avAvgFlagList = None, semiLog = False):
         super(VisdomLinePlotter, self).__init__(name, av, avNameList, avAvgFlagList)
 
         self.count         = 0
         self.minPlotPoints = 2
 
         self.visLine = None
+
+        if ( True == semiLog ):
+            self.plotType = "log"
+        else:
+            self.plotType = "linear"
 
     def initialize(self):
         if ( VisdomLinePlotter.vis is not None ):
@@ -294,6 +304,7 @@ class VisdomLinePlotter(AccumulatedValuePlotter):
                         title = self.title,\
                         xlabel = self.xlabel,\
                         ylabel = self.ylabel,\
+                        ytype = self.plotType,\
                         margintop=30 \
                     )\
                 )
@@ -334,6 +345,10 @@ class VisdomLinePlotter(AccumulatedValuePlotter):
         self.count += 1
 
 class WorkFlow(object):
+
+    SIG_INT       = False # If Ctrl-C is sent to this instance, this will be set to be True.
+    IS_FINALISING = False
+
     def __init__(self, workingDir, prefix = "", suffix = "", logFilename = None):
         self.workingDir = workingDir # The working directory.
         self.prefix = prefix
@@ -410,6 +425,9 @@ class WorkFlow(object):
         av.push_back(value, stamp)
 
     def initialize(self):
+        # Check the system-wide signal.
+        self.check_signal()
+
         # Check whether the working directory exists.
         if ( False == os.path.isdir(self.workingDir) ):
             # Directory does not exist, create the directory.
@@ -431,6 +449,9 @@ class WorkFlow(object):
         self.debug_print("initialize() get called.")
 
     def train(self):
+        # Check the system-wide signal.
+        self.check_signal()
+
         if ( False == self.isInitialized ):
             # This should be an error.
             desc = "The work flow is not initialized yet."
@@ -440,6 +461,9 @@ class WorkFlow(object):
         self.debug_print("train() get called.")
 
     def test(self):
+        # Check the system-wide signal.
+        self.check_signal()
+
         if ( False == self.isInitialized ):
             # This should be an error.
             desc = "The work flow is not initialized yet."
@@ -449,6 +473,8 @@ class WorkFlow(object):
         self.debug_print("test() get called.")
 
     def finalize(self):
+        WorkFlow.IS_FINALISING = True
+
         if ( False == self.isInitialized ):
             # This should be an error.
             desc = "The work flow is not initialized yet."
@@ -464,6 +490,8 @@ class WorkFlow(object):
         self.isInitialized = False
 
         self.debug_print("finalize() get called.")
+
+        WorkFlow.IS_FINALISING = False
 
     def plot_accumulated_values(self):
         if ( 0 == len(self.AVP) ):
@@ -502,3 +530,21 @@ class WorkFlow(object):
     def debug_print(self, msg):
         if ( True == self.verbose ):
             print(msg)
+
+    def compose_file_name(self, fn, ext = ""):
+        return self.workingDir + "/" + self.prefix + fn + self.suffix + "." + ext
+
+    def check_signal(self):
+        if ( True == WorkFlow.SIG_INT ):
+            raise SigIntException("SIGINT received.", "SigIntExp")
+
+# Default signal handler.
+def default_signal_handler(sig, frame):
+    if ( False == WorkFlow.IS_FINALISING ):
+        print("This is the default signal handler. Set SIG_INT flag for WorkFlow class.")
+        WorkFlow.SIG_INT = True
+    else:
+        print("Receive SIGINT during finalizing! Abort the WorkFlow sequence!")
+        sys.exit(0)
+
+signal.signal(signal.SIGINT, default_signal_handler)
