@@ -13,7 +13,6 @@ import signal
 import sys
 
 from visdom import Visdom
-import torch
 import sys
 
 class WFException(Exception):
@@ -567,6 +566,25 @@ class WorkFlow(object):
     def check_signal(self):
         if ( True == WorkFlow.SIG_INT ):
             raise SigIntException("SIGINT received.", "SigIntExp")
+    
+    def print_delimeter(self, c = "=", n = 10, title = "", leading = "\n", ending = "\n"):
+        d = [c for i in range(int(n))]
+
+        if ( 0 == len(title) ):
+            s = "".join(d) + "".join(d)
+        else:
+            s = "".join(d) + " " + title + " " + "".join(d)
+
+        print("%s%s%s" % (leading, s, ending))
+
+    def get_log_str(self):
+        logstr = ''
+        for key in self.AV.keys():
+            try: 
+                logstr += '%s: %.5f ' % (key, self.AV[key].last_avg())
+            except WFException as e:
+                continue
+        return logstr
 
 # Default signal handler.
 def default_signal_handler(sig, frame):
@@ -578,40 +596,3 @@ def default_signal_handler(sig, frame):
         sys.exit(0)
 
 signal.signal(signal.SIGINT, default_signal_handler)
-    
-def print_delimeter(self, c = "=", n = 20, title = "", leading = "\n", ending = "\n"):
-        d = [c for i in range(n/2)]
-
-        if ( 0 == len(title) ):
-            s = "".join(d) + "".join(d)
-        else:
-            s = "".join(d) + " " + title + " " + "".join(d)
-
-        print("%s%s%s" % (leading, s, ending))
-
-    def load_model(self, model, modelname):
-        preTrainDict = torch.load(modelname)
-        model_dict = model.state_dict()
-        # print 'preTrainDict:',preTrainDict.keys()
-        # print 'modelDict:',model_dict.keys()
-        preTrainDict = {k:v for k,v in preTrainDict.items() if k in model_dict}
-        for item in preTrainDict:
-            print('  Load pretrained layer: ',item )
-        model_dict.update(preTrainDict)
-        model.load_state_dict(model_dict)
-        return model
-
-    def save_model(self, model, modelname):
-        modelname = self.prefix + modelname + self.suffix + '.pkl'
-        torch.save(model.state_dict(), os.path.join(self.modeldir, modelname))
-
-    def get_log_str(self):
-        logstr = ''
-        for key in self.AV.keys():
-            try: 
-                logstr += '%s: %.5f ' % (key, self.AV[key].last_avg())
-            except WFException as e:
-                continue
-        return logstr
-
-# TODO: add snapshot to workflow
