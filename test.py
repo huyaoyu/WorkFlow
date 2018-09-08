@@ -17,7 +17,7 @@ def print_delimeter(c = "=", n = 20, title = "", leading = "\n", ending = "\n"):
 # Template for custom WorkFlow object.
 class MyWF(WorkFlow.WorkFlow):
     def __init__(self, workingDir):
-        super(MyWF, self).__init__(workingDir)
+        super(MyWF, self).__init__(workingDir, prefix = "", suffix = "")
 
         # === Create the AccumulatedObjects. ===
         self.add_accumulated_value("lossTest")
