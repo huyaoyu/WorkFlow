@@ -1,5 +1,5 @@
 #! /usr/bin/python
-
+# TODO: write this as a basic template
 from __future__ import print_function
 
 import math
@@ -17,10 +17,21 @@ def print_delimeter(c = "=", n = 20, title = "", leading = "\n", ending = "\n"):
 
     print("%s%s%s" % (leading, s, ending))
 
+LogParamList = ['Lr', 'Batch', 'Trainstep']
+
 # Template for custom WorkFlow object.
 class MyWF(WorkFlow.WorkFlow):
     def __init__(self, workingDir, prefix = "", suffix = ""):
         super(MyWF, self).__init__(workingDir, prefix, suffix)
+
+        # === Custom member variables. ===
+        logstr = ''
+        for param in LogParamList: # record useful params in logfile 
+            try: 
+                logstr += param + ': '+ str(globals()[param]) + ', '
+            except:
+                pass
+        self.logger.info(logstr) 
 
         # === Create the AccumulatedObjects. ===
         self.add_accumulated_value("loss2", 10)
@@ -81,11 +92,7 @@ class MyWF(WorkFlow.WorkFlow):
         super(MyWF, self).train()
 
         # === Custom code. ===
-        # Test the existance of an AccumulatedValue object.
-        if ( True == self.have_accumulated_value("loss") ):
-            self.AV["loss"].push_back(math.sin( self.countTrain*0.1 ), self.countTrain*0.1)
-        else:
-            self.logger.info("Could not find \"loss\"")
+        self.countTrain += 1
 
         # Directly access "loss2" without existance test.
         self.AV["loss2"].push_back(math.cos( self.countTrain*0.1 ), self.countTrain*0.1)
@@ -107,15 +114,12 @@ class MyWF(WorkFlow.WorkFlow):
         if ( self.countTrain % 10 == 0 ):
             self.write_accumulated_values()
 
-        self.countTrain += 1
 
         # Plot accumulated values.
         self.plot_accumulated_values()
 
         self.logger.info("Train loop #%d %s" % (self.countTrain, self.get_log_str()))
         self.logger.info("Trained.")
-
-        time.sleep(0.05)
 
     # Overload the function test().
     def test(self):

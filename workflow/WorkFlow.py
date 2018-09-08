@@ -394,7 +394,7 @@ class WorkFlow(object):
         formatter = logging.Formatter('%(levelname)s: %(message)s')
         streamHandler.setFormatter(formatter)
 
-        self.logger.addHandler(streamHandler)
+        # self.logger.addHandler(streamHandler)
 
         logFilePathPlusName = os.path.join(self.logdir, self.logFilename)
         fileHandler = logging.FileHandler(filename = logFilePathPlusName, mode = "w")
