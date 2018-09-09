@@ -1,15 +1,13 @@
 # WorkFlow: save effort for logging and visualization
 
----
 ## How does it work
 
 WorkFlow extracts basic process of training a neural network, and handles the logging and visualization part. 
 It allows you to focus on the parts that most deserve your valuable efforts, such as network structure and optimization strategy.
 
----
 ## Run the sample
 
-Install dependancies:
+### Install dependancies
 
 Install Pytorch 
 1. Install virtualenv: https://virtualenv.pypa.io/en/stable
@@ -47,9 +45,13 @@ $ pip install visdom
 
 ```
 
-Run the sample code
+### Run the sample code
 
+Run the visdom server
+```
+$ python -m visdom.server 
+```
+Open another terminal
 ```
 $ python sample.py
 ```
----
