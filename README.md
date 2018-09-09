@@ -7,7 +7,7 @@ It allows you to focus on the parts that most deserve your valuable efforts, suc
 
 ## Run the sample
 
-### Install dependancies
+* Install dependancies
 
 Install Pytorch 
 1. Install virtualenv: https://virtualenv.pypa.io/en/stable
@@ -45,7 +45,7 @@ $ pip install visdom
 
 ```
 
-### Run the sample code
+* Run the sample code
 
 Run the visdom server
 ```
