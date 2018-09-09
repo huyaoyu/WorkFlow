@@ -6,8 +6,8 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torchvision import datasets, transforms
 
-import sys
-sys.path.append('../WorkFlow')
+# import sys
+# sys.path.append('../WorkFlow')
 from workflow import WorkFlow
 
 exp_prefix = '1_1_'
