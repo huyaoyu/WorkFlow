@@ -409,7 +409,7 @@ class WorkFlow(object):
         formatter = logging.Formatter('%(levelname)s: %(message)s')
         streamHandler.setFormatter(formatter)
 
-        # self.logger.addHandler(streamHandler)
+        self.logger.addHandler(streamHandler)
 
         logFilePathPlusName = os.path.join(self.logdir, self.logFilename)
         fileHandler = logging.FileHandler(filename = logFilePathPlusName, mode = "w")
@@ -567,7 +567,7 @@ class WorkFlow(object):
         if ( True == WorkFlow.SIG_INT ):
             raise SigIntException("SIGINT received.", "SigIntExp")
     
-    def print_delimeter(self, c = "=", n = 10, title = "", leading = "\n", ending = "\n"):
+    def print_delimeter(self, title = "", c = "=", n = 10, leading = "\n", ending = "\n"):
         d = [c for i in range(int(n))]
 
         if ( 0 == len(title) ):
