@@ -360,7 +360,7 @@ class WorkFlow(object):
     SIG_INT       = False # If Ctrl-C is sent to this instance, this will be set to be True.
     IS_FINALISING = False
 
-    def __init__(self, workingDir, prefix = "", suffix = "", logFilename = None):
+    def __init__(self, workingDir, prefix = "", suffix = "", logFilename = None, disableStreamLogger = False):
         # Add the current path to system path        
         self.workingDir = workingDir # The working directory.
         self.prefix = prefix
@@ -409,7 +409,8 @@ class WorkFlow(object):
         formatter = logging.Formatter('%(levelname)s: %(message)s')
         streamHandler.setFormatter(formatter)
 
-        # self.logger.addHandler(streamHandler)
+        if ( False == disableStreamLogger ):
+            self.logger.addHandler(streamHandler)
 
         logFilePathPlusName = os.path.join(self.logdir, self.logFilename)
         fileHandler = logging.FileHandler(filename = logFilePathPlusName, mode = "w")
