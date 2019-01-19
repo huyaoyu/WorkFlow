@@ -8,7 +8,7 @@ import time
 from workflow import WorkFlow
 
 def print_delimeter(c = "=", n = 20, title = "", leading = "\n", ending = "\n"):
-    d = [c for i in range(n/2)]
+    d = [ c for i in range( int(n/2) ) ]
 
     if ( 0 == len(title) ):
         s = "".join(d) + "".join(d)
@@ -43,6 +43,8 @@ class MyWF(WorkFlow.WorkFlow):
         # self.add_accumulated_value("loss")
 
         # === Create a AccumulatedValuePlotter object for ploting. ===
+        WorkFlow.VisdomLinePlotter.host = "http://128.237.179.115"
+        WorkFlow.VisdomLinePlotter.port = 8097
         avNameList    = ["loss", "loss2", "lossLeap"]
         avAvgFlagList = [  True,   False,      True ]
         self.AVP.append(\

@@ -6,7 +6,6 @@ from __future__ import unicode_literals
 
 import os
 import logging
-import matplotlib.pyplot as plt
 import numpy as np
 import time
 import signal
@@ -14,6 +13,13 @@ import sys
 
 from visdom import Visdom
 import sys
+
+# Packages need further configuration if imported on the sever side.
+import matplotlib.pyplot as plt
+if ( not ( "DISPLAY" in os.environ ) ):
+    plt.switch_backend('agg')
+    print("Environment variable DISPLAY is not present in the system.")
+    print("Switch the backend of matplotlib to agg.")
 
 class WFException(Exception):
     def __init__(self, message, name = None):
@@ -218,6 +224,8 @@ class VisdomLinePlotter(AccumulatedValuePlotter):
     # Class/Static variables.
     vis = None
     visStartUpSec = 1
+    host = "http://localhost"
+    port = 8097
 
     def __init__(self, name, av, avNameList, avAvgFlagList = None, semiLog = False):
         super(VisdomLinePlotter, self).__init__(name, av, avNameList, avAvgFlagList)
@@ -237,7 +245,7 @@ class VisdomLinePlotter(AccumulatedValuePlotter):
             print("visdom already initialized.")
             return
 
-        VisdomLinePlotter.vis = Visdom(server = 'http://localhost', port = 8097, use_incoming_socket = False)
+        VisdomLinePlotter.vis = Visdom(server = VisdomLinePlotter.host, port = VisdomLinePlotter.port, use_incoming_socket = False)
 
         while not VisdomLinePlotter.vis.check_connection() and VisdomLinePlotter.visStartUpSec > 0:
             time.sleep(0.1)
