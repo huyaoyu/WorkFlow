@@ -8,7 +8,7 @@ import time
 from workflow import WorkFlow
 
 def print_delimeter(c = "=", n = 20, title = "", leading = "\n", ending = "\n"):
-    d = [c for i in range( int(n/2) )]
+    d = [ c for i in range( int(n/2) ) ]
 
     if ( 0 == len(title) ):
         s = "".join(d) + "".join(d)
