@@ -5,7 +5,7 @@ from __future__ import print_function
 import math
 import time
 
-from workflow import WorkFlow
+from workflow import WorkFlow, TorchFlow
 
 def print_delimeter(c = "=", n = 20, title = "", leading = "\n", ending = "\n"):
     d = [c for i in range( int(n/2) )]
@@ -20,7 +20,7 @@ def print_delimeter(c = "=", n = 20, title = "", leading = "\n", ending = "\n"):
 LogParamList = ['Lr', 'Batch', 'Trainstep']
 
 # Template for custom WorkFlow object.
-class MyWF(WorkFlow.WorkFlow):
+class MyWF(TorchFlow.TorchFlow):
     def __init__(self, workingDir, prefix = "", suffix = ""):
         super(MyWF, self).__init__(workingDir, prefix, suffix)
 
