@@ -2,7 +2,7 @@
 from __future__ import print_function
 
 import torch
-
+import os
 import WorkFlow
 
 class TorchFlow(WorkFlow.WorkFlow):
