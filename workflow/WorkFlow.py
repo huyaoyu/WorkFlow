@@ -472,7 +472,10 @@ class WorkFlow(object):
             desc = "The work flow is already initialized."
             exp = WFException(desc, "initialize")
             raise(exp)
+        
+        self.debug_print("initialize() get called.")
 
+    def post_initialize(self):
         # Initialize AVP.
         if ( len(self.AVP) > 0 ):
             self.AVP[0].initialize()
@@ -484,7 +487,7 @@ class WorkFlow(object):
 
         self.isInitialized = True
 
-        self.debug_print("initialize() get called.")
+        self.debug_print("post_initialize() get called.")
 
     def train(self):
         # Check the system-wide signal.
@@ -598,6 +601,10 @@ class WorkFlow(object):
 # Default signal handler.
 def default_signal_handler(sig, frame):
     if ( False == WorkFlow.IS_FINALISING ):
+        if ( True == WorkFlow.SIG_INT ):
+            # Force quit.
+            raise WFException("SIGINT force quit.")
+
         print("This is the default signal handler. Set SIG_INT flag for WorkFlow class.")
         WorkFlow.SIG_INT = True
     else:

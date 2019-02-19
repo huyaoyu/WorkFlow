@@ -1,14 +1,15 @@
 
 from __future__ import print_function
 
+import os
 import torch
 
 import WorkFlow
 
 class TorchFlow(WorkFlow.WorkFlow):
     """Add pytorch support based on WorkFlow.WorkFlow"""
-    def __init__(self, workingDir, prefix = "", suffix = ""):
-        super(TorchFlow, self).__init__(workingDir, prefix, suffix)
+    def __init__(self, workingDir, prefix = "", suffix = "", disableStreamLogger = False):
+        super(TorchFlow, self).__init__(workingDir, prefix, suffix, None, disableStreamLogger)
     
     # Overload the function initialize().
     def initialize(self):
