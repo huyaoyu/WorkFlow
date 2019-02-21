@@ -123,6 +123,8 @@ class MyWF(WorkFlow.WorkFlow):
             prefix = "_T%07d_" % (self.countTrain)
             self.plot_accumulated_values(prefix=prefix)
 
+        time.sleep(1)
+
         self.logger.info("Train loop #%d %s" % (self.countTrain, self.get_log_str()))
         self.logger.info("Trained.")
 
@@ -181,6 +183,8 @@ if __name__ == "__main__":
 
         # print_delimeter()
         # wf.AV["lossTest"].show_raw_data()
+    except WorkFlow.SigIntException as sie:
+        wf.finalize()
     except WorkFlow.WFException as e:
         print( e.describe() )
 

@@ -473,6 +473,7 @@ class WorkFlow(object):
 
     SIG_INT       = False # If Ctrl-C is sent to this instance, this will be set to be True.
     IS_FINALISING = False
+    TERMINATION_FILE = ".wf_terminate"
 
     def __init__(self, workingDir, prefix = "", suffix = "", logFilename = None, disableStreamLogger = False):
         # Add the current path to system path        
@@ -495,6 +496,8 @@ class WorkFlow(object):
 
         if ( not os.path.isdir(self.modeldir) ):
             os.makedirs( self.modeldir)
+
+        self.terminationFile = self.workingDir + "/" + WorkFlow.TERMINATION_FILE
 
         self.isInitialized = False
 
@@ -578,6 +581,10 @@ class WorkFlow(object):
             desc = "The work flow is already initialized."
             exp = WFException(desc, "initialize")
             raise(exp)
+
+        # Delete termination file.
+        if ( os.path.isfile( self.terminationFile ) ):
+            os.remove( self.terminationFile )
         
         self.debug_print("initialize() get called.")
 
@@ -599,6 +606,9 @@ class WorkFlow(object):
         # Check the system-wide signal.
         self.check_signal()
 
+        # Check the termination file.
+        self.check_termination_file()
+
         if ( False == self.isInitialized ):
             # This should be an error.
             desc = "The work flow is not initialized yet."
@@ -610,6 +620,9 @@ class WorkFlow(object):
     def test(self):
         # Check the system-wide signal.
         self.check_signal()
+
+        # Check the termination file.
+        self.check_termination_file()
 
         if ( False == self.isInitialized ):
             # This should be an error.
@@ -681,9 +694,17 @@ class WorkFlow(object):
     def compose_file_name(self, fn, ext = ""):
         return self.workingDir + "/" + self.prefix + fn + self.suffix + "." + ext
 
+    def check_termination_file(self):
+        if ( os.path.isfile( self.terminationFile ) ):
+            s = "Find termination file %s." % ( self.terminationFile )
+            self.logger.info(s)
+            raise SigIntException(s, "TermFile")
+
     def check_signal(self):
         if ( True == WorkFlow.SIG_INT ):
-            raise SigIntException("SIGINT received.", "SigIntExp")
+            s = "SIGINT received."
+            self.logger.info(s)
+            raise SigIntException(s, "SigIntExp")
     
     def print_delimeter(self, title = "", c = "=", n = 10, leading = "\n", ending = "\n"):
         d = [c for i in range(int(n))]
