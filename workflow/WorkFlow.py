@@ -179,6 +179,8 @@ class AccumulatedValuePlotter(object):
         
         self.avAvgFlagDict = dict( zip(self.avNameList, avAvgFlagList) )
 
+        self.plotType = "linear" # "log"
+
         self.title = self.name
         self.xlabel = "xlabel"
         self.ylabel = "ylabel"
@@ -211,6 +213,9 @@ class AccumulatedValuePlotter(object):
 
                 legend.append( name + "_avg" )
         
+        if ( self.plotType == "log" ):
+            ax.set_yscale("log")
+
         ax.legend(legend)
         ax.grid()
         ax.set_title( self.title )
@@ -453,7 +458,7 @@ class PLTIntermittentPlotter(AccumulatedValuePlotter):
             self.plotIndexDict[name] = self.AV[name].get_num_values() - 1
         
         if ( self.plotType == "log" ):
-            ax.set_yscale('log')
+            ax.set_yscale("log")
 
         ax.legend(legend)
         ax.grid()
