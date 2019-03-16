@@ -43,3 +43,10 @@ class TorchFlow(WorkFlow.WorkFlow):
     def save_model(self, model, modelname):
         modelname = self.prefix + modelname + self.suffix + '.pkl'
         torch.save(model.state_dict(), os.path.join(self.modeldir, modelname))
+
+    def append_plotter(self, plotName, valueNameList, smoothList):
+        if self.plotterType == 'Visdom':
+            self.AVP.append(VisdomLinePlotter(plotName, self.AV, valueNameList, smoothList))
+        elif self.plotterType == 'Int':
+            self.AVP.append(PLTIntermittentPlotter(self.workingDir + "/IntPlot", plotName, self.AV, valueNameList, smoothList))
+

@@ -444,13 +444,6 @@ class WorkFlow(object):
         # Name is new. Create a new AccumulatedValue object.
         self.AV[name] = AccumulatedValue(name, avgWidth)
 
-    def append_plotter(self, plotName, valueNameList, smoothList):
-        if self.plotterType == 'Visdom':
-            self.AVP.append(VisdomLinePlotter(plotName, self.AV, valueNameList, smoothList))
-        elif self.plotterType == 'Int':
-            self.AVP.append(PLTIntermittentPlotter(self.workingDir + "/IntPlot", plotName, self.AV, valueNameList, smoothList))
-
-
     def have_accumulated_value(self, name):
         return ( name in self.AV.keys() )
 
