@@ -48,7 +48,7 @@ class TorchFlow(WorkFlow.WorkFlow):
 
     def append_plotter(self, plotName, valueNameList, smoothList):
         if self.plotterType == 'Visdom':
-            self.AVP.append(VisdomLinePlotter(plotName, self.AV, valueNameList, smoothList))
+            self.AVP.append(WorkFlow.VisdomLinePlotter(plotName, self.AV, valueNameList, smoothList))
         elif self.plotterType == 'Int':
-            self.AVP.append(PLTIntermittentPlotter(self.workingDir + "/IntPlot", plotName, self.AV, valueNameList, smoothList))
+            self.AVP.append(WorkFlow.PLTIntermittentPlotter(self.workingDir + "/IntPlot", plotName, self.AV, valueNameList, smoothList))
 
