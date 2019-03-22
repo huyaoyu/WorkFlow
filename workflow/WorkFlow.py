@@ -368,7 +368,7 @@ class WorkFlow(object):
     SIG_INT       = False # If Ctrl-C is sent to this instance, this will be set to be True.
     IS_FINALISING = False
 
-    def __init__(self, workingDir, prefix = "", suffix = "", logFilename = None, disableStreamLogger = False, plotterType='Visdom'):
+    def __init__(self, workingDir, prefix = "", suffix = "", logFilename = None, disableStreamLogger = False):
         # Add the current path to system path        
         self.workingDir = workingDir # The working directory.
         self.prefix = prefix
@@ -419,8 +419,6 @@ class WorkFlow(object):
 
         if ( False == disableStreamLogger ):
             self.logger.addHandler(streamHandler)
-
-        self.plotterType = plotterType
 
         logFilePathPlusName = os.path.join(self.logdir, self.logFilename)
         fileHandler = logging.FileHandler(filename = logFilePathPlusName, mode = "w")

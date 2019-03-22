@@ -8,8 +8,10 @@ import WorkFlow
 
 class TorchFlow(WorkFlow.WorkFlow):
     """Add pytorch support based on WorkFlow.WorkFlow"""
-    def __init__(self, workingDir, prefix = "", suffix = "", disableStreamLogger = False):
+    def __init__(self, workingDir, prefix = "", suffix = "", disableStreamLogger = False, plotterType='Visdom'):
         super(TorchFlow, self).__init__(workingDir, prefix, suffix, None, disableStreamLogger)
+
+        self.plotterType = plotterType
     
     # Overload the function initialize().
     def initialize(self):
