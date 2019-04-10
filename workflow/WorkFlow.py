@@ -650,7 +650,7 @@ class WorkFlow(object):
         self.write_accumulated_values()
         self.draw_accumulated_values()
 
-        self.logger.info("Accumulated values are written to %s." % (self.workingDir + "/AccumulatedValues"))
+        self.logger.info("Accumulated values are written.")
 
         self.isInitialized = False
 
@@ -696,8 +696,17 @@ class WorkFlow(object):
         if ( True == self.verbose ):
             print(msg)
 
-    def compose_file_name(self, fn, ext = ""):
-        return self.workingDir + "/" + self.prefix + fn + self.suffix + "." + ext
+    def compose_file_name(self, fn, ext = "", subFolder=None):
+        if ( subFolder is None ):
+            return self.workingDir + "/" + self.prefix + fn + self.suffix + "." + ext
+        else:
+            return self.workingDir + "/" + subFolder + "/" + self.prefix + fn + self.suffix + "." + ext
+
+    def make_subfolder(self, subFolder):
+        path = self.workingDir + "/" + subFolder
+        
+        if ( not os.path.isdir( path ) ):
+            os.makedirs( path )
 
     def check_termination_file(self):
         if ( os.path.isfile( self.terminationFile ) ):
