@@ -3,7 +3,7 @@ from __future__ import print_function
 
 import os
 import torch
-from . import WorkFlow
+from workflow import WorkFlow
 
 class TorchFlow(WorkFlow.WorkFlow):
     """Add pytorch support based on WorkFlow.WorkFlow"""

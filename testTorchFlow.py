@@ -84,6 +84,8 @@ class MyWF(TorchFlow.TorchFlow):
     def initialize(self):
         super(MyWF, self).initialize()
 
+        self.post_initialize()
+
         # === Custom code. ===
         self.logger.info("Initialized.")
 
