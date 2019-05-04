@@ -7,8 +7,10 @@ from . import WorkFlow
 
 class TorchFlow(WorkFlow.WorkFlow):
     """Add pytorch support based on WorkFlow.WorkFlow"""
-    def __init__(self, workingDir, prefix = "", suffix = "", disableStreamLogger = False):
+    def __init__(self, workingDir, prefix = "", suffix = "", disableStreamLogger = False, plotterType='Visdom'):
         super(TorchFlow, self).__init__(workingDir, prefix, suffix, None, disableStreamLogger)
+
+        self.plotterType = plotterType
     
     # Overload the function initialize().
     def initialize(self):
@@ -56,3 +58,10 @@ class TorchFlow(WorkFlow.WorkFlow):
     def save_model(self, model, modelname):
         modelname = self.prefix + modelname + self.suffix + '.pkl'
         torch.save(model.state_dict(), os.path.join(self.modeldir, modelname))
+
+    def append_plotter(self, plotName, valueNameList, smoothList):
+        if self.plotterType == 'Visdom':
+            self.AVP.append(WorkFlow.VisdomLinePlotter(plotName, self.AV, valueNameList, smoothList))
+        elif self.plotterType == 'Int':
+            self.AVP.append(WorkFlow.PLTIntermittentPlotter(self.workingDir + "/IntPlot", plotName, self.AV, valueNameList, smoothList))
+
