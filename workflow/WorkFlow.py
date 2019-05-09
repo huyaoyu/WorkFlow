@@ -391,86 +391,86 @@ class PLTIntermittentPlotter(AccumulatedValuePlotter):
 
     def update(self, prefix="", suffix=""):
         # Gather the data.
-        nMaxPoints = 0
+        # nMaxPoints = 0
 
-        for name in self.avNameList:
-            # Find the AccumulatedVariable object.
-            av = self.AV[name]
-            nPoints = av.get_num_values()
+        # for name in self.avNameList:
+        #     # Find the AccumulatedVariable object.
+        #     av = self.AV[name]
+        #     nPoints = av.get_num_values()
 
-            if ( nPoints > nMaxPoints ):
-                nMaxPoints = nPoints
+        #     if ( nPoints > nMaxPoints ):
+        #         nMaxPoints = nPoints
         
-        if ( nMaxPoints < self.minPlotPoints ):
-            # Not enough points to plot, do nothing.
-            return
+        # if ( nMaxPoints < self.minPlotPoints ):
+        #     # Not enough points to plot, do nothing.
+        #     return
         
-        # Enough points to plot.
-        # Get the points to be ploted.
-        nameList = []
-        for name in self.avNameList:
-            av = self.AV[name]
-            lastIdx = self.plotIndexDict[name]
-            pointsInAv = av.get_num_values()
+        # # Enough points to plot.
+        # # Get the points to be ploted.
+        # nameList = []
+        # for name in self.avNameList:
+        #     av = self.AV[name]
+        #     lastIdx = self.plotIndexDict[name]
+        #     pointsInAv = av.get_num_values()
 
-            if ( pointsInAv - 1 > lastIdx and 0 != pointsInAv ):
-                nameList.append(name)
+        #     if ( pointsInAv - 1 > lastIdx and 0 != pointsInAv ):
+        #         nameList.append(name)
 
-        if ( 0 == len( nameList ) ):
-            # No update actions should be performed.
-            return
+        # if ( 0 == len( nameList ) ):
+        #     # No update actions should be performed.
+        #     return
 
-        # === Need to plot new figure. ===
+        # # === Need to plot new figure. ===
 
-        # Create matplotlib figure.
-        fig, ax = plt.subplots(1)
-        legend = []
+        # # Create matplotlib figure.
+        # fig, ax = plt.subplots(1)
+        # legend = []
 
-        for i in range( len(nameList) ):
-            name    = nameList[i]
-            av      = self.AV[name]
-            lastIdx = self.plotIndexDict[name]
+        # for i in range( len(nameList) ):
+        #     name    = nameList[i]
+        #     av      = self.AV[name]
+        #     lastIdx = self.plotIndexDict[name]
 
-            # x = np.array( av.get_stamps()[ lastIdx + 1 : ] )
-            # y = np.array( av.get_values()[ lastIdx + 1 : ] )
+        #     # x = np.array( av.get_stamps()[ lastIdx + 1 : ] )
+        #     # y = np.array( av.get_values()[ lastIdx + 1 : ] )
 
-            x = np.array( av.get_stamps() )
-            y = np.array( av.get_values() )
+        #     x = np.array( av.get_stamps() )
+        #     y = np.array( av.get_values() )
 
-            ax.plot( x, y )
-            legend.append( name )
+        #     ax.plot( x, y )
+        #     legend.append( name )
 
-        for i in range( len(nameList) ):
-            name    = nameList[i]
-            av      = self.AV[name]
-            lastIdx = self.plotIndexDict[name]
+        # for i in range( len(nameList) ):
+        #     name    = nameList[i]
+        #     av      = self.AV[name]
+        #     lastIdx = self.plotIndexDict[name]
 
-            # x = np.array( av.get_stamps()[ lastIdx + 1 : ] )
-            # y = np.array( self.AV[name].get_avg()[ self.plotIndexDict[name] + 1 : ] )
+        #     # x = np.array( av.get_stamps()[ lastIdx + 1 : ] )
+        #     # y = np.array( self.AV[name].get_avg()[ self.plotIndexDict[name] + 1 : ] )
 
-            x = np.array( av.get_stamps() )
-            y = np.array( self.AV[name].get_avg() )
+        #     x = np.array( av.get_stamps() )
+        #     y = np.array( self.AV[name].get_avg() )
 
-            ax.plot( x, y )
-            legend.append( name )
+        #     ax.plot( x, y )
+        #     legend.append( name )
 
-            # Update the self.plotIndexDict.
-            self.plotIndexDict[name] = self.AV[name].get_num_values() - 1
+        #     # Update the self.plotIndexDict.
+        #     self.plotIndexDict[name] = self.AV[name].get_num_values() - 1
         
-        if ( self.plotType == "log" ):
-            ax.set_yscale("log")
+        # if ( self.plotType == "log" ):
+        #     ax.set_yscale("log")
 
-        ax.legend(legend)
-        ax.grid()
-        ax.set_title( self.title )
-        ax.set_xlabel( self.xlabel )
-        ax.set_ylabel( self.ylabel )
+        # ax.legend(legend)
+        # ax.grid()
+        # ax.set_title( self.title )
+        # ax.set_xlabel( self.xlabel )
+        # ax.set_ylabel( self.ylabel )
 
-        # Save to an image.
-        fn = "%s/%04d%s%s%s.png" % (self.saveDir, self.count, prefix, self.title, suffix)
-        fig.savefig(fn)
+        # # Save to an image.
+        # fn = "%s/%04d%s%s%s.png" % (self.saveDir, self.count, prefix, self.title, suffix)
+        # fig.savefig(fn)
 
-        plt.close(fig)
+        # plt.close(fig)
 
         self.count += 1
 

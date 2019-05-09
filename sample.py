@@ -178,14 +178,14 @@ class MyWF(WorkFlow.WorkFlow):
 if __name__ == "__main__":
 
     use_cuda = torch.cuda.is_available()
-    device = torch.device("cuda" if use_cuda else "cpu")
+    # device = torch.device("cuda" if use_cuda else "cpu")
 
     try:
         # Instantiate an object for MyWF.
         wf = MyWF("./", prefix = exp_prefix)
 
         # Initialization.
-        wf.initialize(device)
+        wf.initialize()#device)
 
         while True:
             
