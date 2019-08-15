@@ -156,7 +156,12 @@ class AccumulatedValue(object):
         # np.savetxt( outDir + "/" + prefix + self.name + suffix + "_avg.txt", avg )
 
 class AccumulatedValuePlotter(object):
-    def __init__(self, name, av, avNameList, avAvgFlagList = None):
+    def __init__(self, name, av, avNameList, dispTypeList = None):
+        '''
+        dispTypeList: 0 - plot data only
+                      1 - plot data and average
+                      2 - plot average only
+        '''
         self.name       = name
         self.AV         = av
         self.avNameList = avNameList
@@ -170,14 +175,14 @@ class AccumulatedValuePlotter(object):
 
         self.plotIndexDict = dict( zip(self.avNameList, initIndexList) )
 
-        if ( avAvgFlagList is None ):
-            avAvgFlagList = [False] * len( self.avNameList )
+        if ( dispTypeList is None ):
+            dispTypeList = [0] * len( self.avNameList )
         else:
-            if ( len(self.avNameList) != len(avAvgFlagList) ):
-                exp = WFException("The lenght of avAvgFlagList should be the same with avNameList", "AccumulatedValuePlotter")
+            if ( len(self.avNameList) != len(dispTypeList) ):
+                exp = WFException("The lenght of dispTypeList should be the same with avNameList", "AccumulatedValuePlotter")
                 raise(exp)
         
-        self.avAvgFlagDict = dict( zip(self.avNameList, avAvgFlagList) )
+        self.avAvgFlagDict = dict( zip(self.avNameList, dispTypeList) )
 
         self.plotType = "linear" # "log"
 
@@ -200,13 +205,14 @@ class AccumulatedValuePlotter(object):
         legend = []
 
         for name in self.avNameList:
-            av = self.AV[name]
+            if ( 0 == self.avAvgFlagDict[name] or 1 == self.avAvgFlagDict[name]):
+                av = self.AV[name]
 
-            ax.plot( av.get_stamps(), av.get_values() )
-            legend.append( name )
+                ax.plot( av.get_stamps(), av.get_values() )
+                legend.append( name )
 
         for name in self.avNameList:
-            if ( True == self.avAvgFlagDict[name] ):
+            if ( 1 == self.avAvgFlagDict[name] or 2 == self.avAvgFlagDict[name]):
                 av = self.AV[name]
 
                 ax.plot( av.get_stamps(), av.get_avg() )
@@ -232,8 +238,8 @@ class VisdomLinePlotter(AccumulatedValuePlotter):
     host = "http://localhost"
     port = 8097
 
-    def __init__(self, name, av, avNameList, avAvgFlagList = None, semiLog = False):
-        super(VisdomLinePlotter, self).__init__(name, av, avNameList, avAvgFlagList)
+    def __init__(self, name, av, avNameList, dispTypeList = None, semiLog = False):
+        super(VisdomLinePlotter, self).__init__(name, av, avNameList, dispTypeList)
 
         self.count         = 0
         self.minPlotPoints = 2
@@ -333,17 +339,18 @@ class VisdomLinePlotter(AccumulatedValuePlotter):
                     )\
                 )
             else:
-                # Append data to self.visLine.
-                vis.line(\
-                    X = x,\
-                    Y = np.array( av.get_values()[ lastIdx + 1 : ] ),\
-                    win = self.visLine,\
-                    name = name,\
-                    update = "append",\
-                    opts = dict(\
-                        showlegend = True \
-                    )\
-                )
+                if ( 0 == self.avAvgFlagDict[name] or 1 == self.avAvgFlagDict[name] ):
+                    # Append data to self.visLine.
+                    vis.line(\
+                        X = x,\
+                        Y = np.array( av.get_values()[ lastIdx + 1 : ] ),\
+                        win = self.visLine,\
+                        name = name,\
+                        update = "append",\
+                        opts = dict(\
+                            showlegend = True \
+                        )\
+                    )
 
         for i in range( len(nameList) ):
             name    = nameList[i]
@@ -351,7 +358,7 @@ class VisdomLinePlotter(AccumulatedValuePlotter):
             lastIdx = self.plotIndexDict[name]
 
             # Average line.
-            if ( True == self.avAvgFlagDict[name] ):
+            if ( 1 == self.avAvgFlagDict[name] or 2 == self.avAvgFlagDict[name] ):
                 vis.line(\
                     X = np.array( av.get_stamps()[ lastIdx + 1 : ] ),\
                     Y = np.array( self.AV[name].get_avg()[ self.plotIndexDict[name] + 1 : ] ),\
@@ -371,8 +378,8 @@ class VisdomLinePlotter(AccumulatedValuePlotter):
 class PLTIntermittentPlotter(AccumulatedValuePlotter):
     # Class/Static variables.
 
-    def __init__(self, saveDir, name, av, avNameList, avAvgFlagList = None, semiLog = False):
-        super(PLTIntermittentPlotter, self).__init__(name, av, avNameList, avAvgFlagList)
+    def __init__(self, saveDir, name, av, avNameList, dispTypeList = None, semiLog = False):
+        super(PLTIntermittentPlotter, self).__init__(name, av, avNameList, dispTypeList)
 
         self.count         = 0
         self.minPlotPoints = 2
