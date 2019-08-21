@@ -737,15 +737,18 @@ class WorkFlow(object):
 
         print("%s%s%s" % (leading, s, ending))
 
-    def get_log_str(self, ignore=''):
+    def get_log_str(self, ignore=[]):
         logstr = ''
         for key in self.AV.keys():
-            if len(ignore)>0 and ignore in key:
-                continue
-            try: 
-                logstr += '%s: %.5f ' % (key, self.AV[key].last())
-            except WFException as e:
-                continue
+            valid = True
+            for ingstr in ignore:
+                if ingstr in key:
+                    valid = False
+            if valid:
+                try: 
+                    logstr += '%s: %.5f ' % (key, self.AV[key].last())
+                except WFException as e:
+                    continue
         return logstr
 
 # Default signal handler.
