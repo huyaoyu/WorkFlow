@@ -55,9 +55,19 @@ class TorchFlow(WorkFlow.WorkFlow):
         model.load_state_dict(model_dict)
         return model
 
+    def load_optimizer(self, opt, optName):
+        state = torch.load(optName)
+        opt.load_state_dict( state )
+
+        return opt
+
     def save_model(self, model, modelname):
         modelname = self.prefix + modelname + self.suffix + '.pkl'
         torch.save(model.state_dict(), os.path.join(self.modeldir, modelname))
+
+    def save_optimizer(self, opt, optName):
+        optName = "%s%s%s.pkl" % ( self.prefix, optName, self.suffix )
+        torch.save( opt.state_dict(), os.path.join(self.modeldir, optName) )
 
     def append_plotter(self, plotName, valueNameList, smoothList, semiLog=False):
         if self.plotterType == 'Visdom':
