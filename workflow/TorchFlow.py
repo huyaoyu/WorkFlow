@@ -44,14 +44,12 @@ class TorchFlow(WorkFlow.WorkFlow):
                 if ( kk in model_dict ):
                     preTrainDictTemp[kk] = v
 
-            preTrainDict = preTrainDictTemp
-
-        if ( 0 == len(preTrainDict) ):
+        if ( 0 == len(preTrainDictTemp) ):
             raise WorkFlow.WFException("Could not load model from %s." % (modelname), "load_model")
 
-        for item in preTrainDict:
+        for item in preTrainDictTemp:
             self.logger.info("Load pretrained layer:{}".format(item) )
-        model_dict.update(preTrainDict)
+        model_dict.update(preTrainDictTemp)
         model.load_state_dict(model_dict)
         return model
 
