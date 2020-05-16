@@ -115,14 +115,14 @@ class AccumulatedValue(object):
 
         return self.acc[-1]
 
-    def last_avg(self):
+    def last_avg(self, ave_num=1):
         if ( 0 == len(self.avg) ):
             # This is an error.
             desc = "The length of the current accumulated values is zero."
             exp = WFException(desc, "last")
             raise(exp)
 
-        return self.avg[-1]
+        return np.array(self.avg)[-ave_num:].mean()
 
     def get_num_values(self):
         return len( self.acc )
