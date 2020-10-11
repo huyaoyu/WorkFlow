@@ -746,7 +746,7 @@ class WorkFlow(object):
                     valid = False
             if valid:
                 try: 
-                    logstr += '%s: %.5f ' % (key, self.AV[key].last())
+                    logstr += '%s: %.4f ' % (key, self.AV[key].last())
                 except WFException as e:
                     continue
         return logstr
