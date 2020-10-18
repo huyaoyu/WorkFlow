@@ -49,8 +49,8 @@ class TorchFlow(WorkFlow.WorkFlow):
         if ( 0 == len(preTrainDict) ):
             raise WorkFlow.WFException("Could not load model from %s." % (modelname), "load_model")
 
-        for item in preTrainDict:
-            self.logger.info("Load pretrained layer:{}".format(item) )
+        # for item in preTrainDict:
+        #     self.logger.info("Load pretrained layer:{}".format(item) )
         model_dict.update(preTrainDict)
         model.load_state_dict(model_dict)
         return model
