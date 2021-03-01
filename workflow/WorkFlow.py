@@ -734,7 +734,7 @@ class WorkFlow(object):
         logstr = ''
         for key in self.AV.keys():
             try: 
-                logstr += '%s: %.5f ' % (key, self.AV[key].last_avg())
+                logstr += '%s: %.5f ' % (key, self.AV[key].last())
             except WFException as e:
                 continue
         return logstr
