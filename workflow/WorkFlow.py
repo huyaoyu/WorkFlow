@@ -545,19 +545,19 @@ class WorkFlow(object):
 
         self.logger.info("WorkFlow created.")
 
-    def add_accumulated_value(self, name, avgWidth = 2):
+    def have_accumulated_value(self, name):
+        return ( name in self.AV.keys() )
+
+    def add_accumulated_value(self, name, avgWidth=2, overwrite=False):
         # Check if there is alread an ojbect which has the same name.
-        if ( name in self.AV.keys() ):
+        if ( not overwrite and self.have_accumulated_value(name) ):
             # This is an error.
             desc = "There is already an object registered as \"%s\"." % (name)
             exp = WFException(desc, "add_accumulated_value")
             raise(exp)
         
-        # Name is new. Create a new AccumulatedValue object.
+        # Create/update an AccumulatedValue object.
         self.AV[name] = AccumulatedValue(name, avgWidth)
-
-    def have_accumulated_value(self, name):
-        return ( name in self.AV.keys() )
 
     def push_to_av(self, name, value, stamp = None):
         # Check if the name exists.
