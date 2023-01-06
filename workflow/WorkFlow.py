@@ -145,9 +145,9 @@ class AccumulatedValue(object):
 
     def dump(self, outDir, prefix = "", suffix = ""):
         # Convert acc and avg into NumPy arrays.
-        acc = np.column_stack( ( np.array(self.stamp).astype(np.float), np.array(self.acc).astype(np.float) ) )
-        avg = np.column_stack( ( np.array(self.stamp).astype(np.float), np.array(self.avg).astype(np.float) ) )
-
+        acc = np.column_stack( ( np.array(self.stamp).astype(float), np.array(self.acc).astype(float) ) )
+        avg = np.column_stack( ( np.array(self.stamp).astype(float), np.array(self.avg).astype(float) ) )
+        
         # Dump the files.
         np.save(    outDir + "/" + prefix + self.name + suffix + ".npy", acc )
         np.savetxt( outDir + "/" + prefix + self.name + suffix + ".txt", acc )
